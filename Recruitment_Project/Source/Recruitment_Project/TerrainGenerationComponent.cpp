@@ -16,94 +16,150 @@ UTerrainGenerationComponent::UTerrainGenerationComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
-
-	// ...
-}
-
-// Called when the game starts
-void UTerrainGenerationComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	TArray<AActor*> FoundActors;
- 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), FoundActors);
-
-	ACameraActor* Camera = Cast<ACameraActor>(FoundActors[0]);
-
-	if(!Camera) { UE_LOG(LogTemp, Warning, TEXT("Current active camera not found!")); return; }
-
-	UCameraComponent* CameraComponent = Camera->FindComponentByClass<UCameraComponent>();
-
-	if(!CameraComponent) { UE_LOG(LogTemp, Warning, TEXT("Current active camera COMPONENT not found!")); return; }
-
-	// int32 AspectRatio = CameraComponent->
-	int32 NewOrthoWidth = TerrainColumns * XOffset;
-	
-	CameraComponent->SetOrthoWidth(NewOrthoWidth);
-
-	StartLocation = FVector(-NewOrthoWidth/2 + XOffset/2, 0, (-NewOrthoWidth/1.25)/2 + 170/2);
 }
 
 void UTerrainGenerationComponent::LoadTileSprites()
 {
-	TArray<UObject*> Textures;
-	EngineUtils::FindOrLoadAssetsByPath(TEXT("/Game/Assets/Images/Terrain"), Textures, EngineUtils::ATL_Regular);
+	// Find all tile objects in the Terrain's folder
+	TArray<UObject*> TileTextures;
+	EngineUtils::FindOrLoadAssetsByPath(TEXT("/Game/Assets/Images/Terrain"), TileTextures, EngineUtils::ATL_Regular);
 
-	for (auto asset : Textures)
+	for (auto Asset : TileTextures) // Iterate through all the found objects
 	{
-		UPaperSprite* Sprite = Cast<UPaperSprite>(asset);
+		// Save the objects that are Paper Sprites in the TileSprites array
+		UPaperSprite* Sprite = Cast<UPaperSprite>(Asset);
 		if (Sprite != nullptr)
 			TileSprites.Add(Sprite);
 	}
 }
 
-void UTerrainGenerationComponent::InitTerrainTiles()
+FVector UTerrainGenerationComponent::GetStartSpawningLocation()	
 {
-	int32 PreviousType = FMath::RandRange(0, 3);
-	int32 PreviousMaterial = FMath::RandRange(0, 3);
+	// Find all camera actors in the world
+	TArray<AActor*> FoundActors;
+ 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACameraActor::StaticClass(), FoundActors);
 
-	for(int32 i = 0; i < TerrainRows*TerrainColumns; i++)
-	{
-		for(int32 j = 0; j < TerrainColumns; j++)
-		{
-			FTile NextTile = FTile();
+	if(!FoundActors[0]) { UE_LOG(LogTemp, Warning, TEXT("No camera actors were found in the world!")); return FVector(0); }
 
-			NextTile.Type = FMath::RandRange(0, 3);
+	// Get the first camera actor found
+	ACameraActor* Camera = Cast<ACameraActor>(FoundActors[0]);
 
-			if(PreviousType == 0 || PreviousType == 3)
-			{
-				while(NextTile.Type != 0 && NextTile.Type != 2)
-					NextTile.Type = FMath::RandRange(0, 3);
-			}
-			else if(PreviousType == 1 || PreviousType == 2)
-			{
-				while(NextTile.Type != 1 && NextTile.Type != 3)
-					NextTile.Type = FMath::RandRange(0, 3);
-			}
+	if(!Camera) { UE_LOG(LogTemp, Warning, TEXT("Current active camera not found!")); return FVector(0); }
 
-			PreviousType = NextTile.Type;
+	// Get the camera component of the camera actor
+	UCameraComponent* CameraComponent = Camera->FindComponentByClass<UCameraComponent>();
 
-			NextTile.Sprite = TileSprites[0];
+	if(!CameraComponent) { UE_LOG(LogTemp, Warning, TEXT("Current active camera COMPONENT not found!")); return FVector(0); }
 
-			TerrainTiles.Add(NextTile);
-		}
-	}
+	// Calculate new orthographic width for the terrain to fit in the screen
+	int32 NewOrthoWidth = TerrainColumns * TileWidth;
+
+	// Set new aspect ratio of the camera component
+	float NewAspectRatio = 16/9;
+	CameraComponent->SetAspectRatio(NewAspectRatio);
+
+	// Set new orthographic width to the camera
+	CameraComponent->SetOrthoWidth(NewOrthoWidth);
+
+	// Calculate the position on the screen where the terrain tiles will start spawning
+	return FVector(-NewOrthoWidth/2 + TileWidth/2, 0, (-NewOrthoWidth/NewAspectRatio)/2 + TileHeight/2);
 }
 
-void UTerrainGenerationComponent::GenerateRandomTerrain()
-{
-	for(int32 i = 0; i < TerrainRows; i++)
+TArray<FPath>& UTerrainGenerationComponent::GenerateRandomTerrain() 															
+{																	
+	// Load tile sprites from the content folder
+	LoadTileSprites();
+
+	// Initialise random terrain size
+	TerrainRows = FMath::RandRange(4, 5);
+	TerrainColumns = FMath::RandRange(6, 7);
+
+	// Get the location where the tiles will start spawning
+	FVector StartLocation = GetStartSpawningLocation();
+
+	for(int32 i = 0; i  < TerrainRows; i++) // Travel the terrain pathways
 	{
-		for(int32 j = 0; j < TerrainColumns; j++)
+		// Initialise and add a new path to the terrain
+		FPath Path = FPath();
+		TerrainTiles.Add(Path);
+
+		// Initialise the first visible tile location in the current pathway (2nd and 3rd visible tiles will be the following ones)
+		int32 VisibleTile = FMath::RandRange(0, TerrainColumns - 3); 
+
+		// Type of the last tile added to the terrain (Range between 1 and 2, we don't want a ramp as the first tile of a path)
+		int32 LastType = FMath::RandRange(0, 3); 
+
+		for(int32 j = 0; j < TerrainColumns; j++) // Travel the terrain pathway's tiles
+		{
+			// Initialise the new terrain tile
+			FTile Tile = FTile(); 
+
+			// Initialise new tile's type --> 0:Normal Block, 1:West Ramp, 2:East Ramp, 3:Big Block
+
+			if(LastType == 0) // Last placed tile is a normal block
+				Tile.Type = FMath::RandRange(0, 1); // Next tile is wether a normal block or a west ramp
+			else if(LastType == 1) // Last placed tile is a west ramp
+				Tile.Type = 3; // Next tile is big block
+			else if(LastType == 2) // Last placed tile is a east ramp
+				Tile.Type = 0; // Next tile is a normal block
+			else // Last placed tile is a big block
+				Tile.Type = FMath::RandRange(2, 3); // Next tile is wether a big block or an east ramp
+
+			LastType = Tile.Type;
+
+			// TODO --> Ensure there ara at least three visible tiles in every pathway
+
+			// TODO --> Initialise tile's material 
+
+			// Initialise tile's sprite based on type and material
+			if(Tile.Type == 0)
+				Tile.Sprite = TileSprites[12];
+			else if(Tile.Type == 1)
+				Tile.Sprite = TileSprites[7];
+			else if(Tile.Type == 2)
+				Tile.Sprite = TileSprites[4];
+			else if(Tile.Type == 3)
+				Tile.Sprite = TileSprites[13];
+
+			// Initialise tile's location based on type
+			Tile.Location = StartLocation + FVector(TileWidth * j, YOffset * i, ZOffset * i);
+			
+			if(Tile.Type == 1 || Tile.Type == 2) // If the tile is a ramp, an offset of 40 units in the Y axis is applied
+				Tile.Location = Tile.Location + FVector(0, 0, 40);
+
+			// Add tile to the terrain array
+			TerrainTiles[i].Tiles.Add(Tile);
+		}
+	}
+
+	// Spawn the terrain tiles in the world
+	SpawnRandomTerrain(); 
+
+	// Return the array containing the terrain tiles info.
+	return TerrainTiles;
+}
+
+
+void UTerrainGenerationComponent::SpawnRandomTerrain() 
+{
+	for(int32 i = 0; i < TerrainTiles.Num(); i++) // Travel the paths of the terrain
+	{
+		for(int32 j = 0; j < TerrainTiles[i].Tiles.Num(); j++) // Travel the tiles of the current path
 		{
 			if(!TileBP) { UE_LOG(LogTemp, Warning, TEXT("Tile blueprint to spawn was not found!")); return; }
-
-			auto SpawnedTile = GetWorld()->SpawnActor<ATerrainTile>(TileBP, StartLocation + FVector(XOffset * j, -10 * i, YOffset * i), FRotator(0, 0, 0));
-			UPaperSpriteComponent* TileSprite = SpawnedTile->FindComponentByClass<UPaperSpriteComponent>(); 
+			
+			// Spawn tile at the appropiate world location
+			auto SpawnedTile = GetWorld()->SpawnActor<ATerrainTile>(TileBP, TerrainTiles[i].Tiles[j].Location, FRotator(0));
 
 			if(!SpawnedTile) { UE_LOG(LogTemp, Warning, TEXT("Spawned tile was not found!")); return; }
+
+			// Get the sprite component of the new spawned tile
+			UPaperSpriteComponent* TileSprite = SpawnedTile->FindComponentByClass<UPaperSpriteComponent>(); 
+
+			if(!TileSprite) { UE_LOG(LogTemp, Warning, TEXT("Sprite component was not found!")); return; }
 			
-			TileSprite->SetSprite(TerrainTiles[i].Sprite);
+			// Set appropiate sprite value in the sprite component
+			TileSprite->SetSprite(TerrainTiles[i].Tiles[j].Sprite);
 		}
 	}
 }
