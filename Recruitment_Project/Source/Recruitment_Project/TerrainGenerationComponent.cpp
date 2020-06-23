@@ -131,14 +131,12 @@ TArray<FPath>& UTerrainGenerationComponent::GenerateRandomTerrain()
 			TerrainTiles[i].Tiles.Add(Tile);
 		}
 	}
-
 	// Spawn the terrain tiles in the world
 	SpawnRandomTerrain(); 
 
 	// Return the array containing the terrain tiles info.
 	return TerrainTiles;
 }
-
 
 void UTerrainGenerationComponent::SpawnRandomTerrain() 
 {

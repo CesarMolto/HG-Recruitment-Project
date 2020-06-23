@@ -19,70 +19,87 @@ AHostage::AHostage()
 void AHostage::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if(HostageState == EHostageState::Alive)
-		Move(DeltaTime);
+	MoveToNextLocation(DeltaTime);
 }
 
-void MoveToNextLocation(float DeltaTime)
+void AHostage::MoveToNextLocation(float DeltaTime)
 {
-	/* float DeltaSpeed = Speed * DeltaTime;
-
-	FVector CurrentLocation = GetActorLocation();
-
-	// Calculate distance between current and next location on the X and Z Axis
-	float XDistance = FGenericPlatformMath::Abs(NextLocation.X - CurrentLocation.X);
-	float ZDistance = FGenericPlatformMath::Abs(NextLocation.Z - CurrentLocation.Z);
-
-	FVector2D DeltaVector = FVector2D(XDistance, ZDistance).Normalize(0.1f); */
-
-}
-
-void AHostage::Move(float DeltaTime)
-{
-	// Calculate DeltaSpeed for a framerate independen movement
+	// Calculate DeltaSpeed to have a framerate independent movement
 	float DeltaSpeed = Speed * DeltaTime;
 
-	// Get the current actor location and the next location in the path
-	FVector CurrentLocation = GetActorLocation();
-	NextLocation = Pathway[NextLocationIndex];
+	// Initialise NextLocation for the first time with the first value of the Pathway variable
+	if(NextLocation.IsZero() && PathwayIndex < Pathway.Num() - 1)
+		NextLocation = Pathway[PathwayIndex];
 
-	if(NextLocationIndex == Pathway.Num() - 1)
-		NextLocation += FVector(100, 0, 0);	
+	// Get current location of the actor
+	FVector CurrentLocation = GetActorLocation();
 
 	// Calculate distance between current and next location on the X and Z Axis
 	float XDistance = FGenericPlatformMath::Abs(NextLocation.X - CurrentLocation.X);
 	float ZDistance = FGenericPlatformMath::Abs(NextLocation.Z - CurrentLocation.Z);
 
-	float XDeltaSpeed = DeltaSpeed;
-	float ZDeltaSpeed = DeltaSpeed * 0.5f;
+	// Normalize the distances
+	FVector2D DeltaVector = FVector2D(XDistance, ZDistance);
+	DeltaVector.Normalize();
 
-	if(XDistance < 0.5f && ZDistance < 0.5f)
-	{
-		if(NextLocationIndex < Pathway.Num() - 1)
-			NextLocationIndex ++;
-		else
-			Destroy();		
-	}
-	else
+	// Get the delta speed for each axis
+	float XDeltaSpeed = DeltaSpeed * DeltaVector.X;
+	float ZDeltaSpeed = DeltaSpeed * DeltaVector.Y;
+
+	// Move on the X axis
+	if(XDistance > AcceptanceRadius)
 	{
 		if(CurrentLocation.X < NextLocation.X)
 			CurrentLocation += FVector(XDeltaSpeed, 0, 0);
 		else
 			CurrentLocation -= FVector(XDeltaSpeed, 0, 0);
+	}
 
+	// Move on the Z axis
+	if(ZDistance > AcceptanceRadius)
+	{
 		if(CurrentLocation.Z < NextLocation.Z)
 			CurrentLocation += FVector(0, 0, ZDeltaSpeed);
 		else
 			CurrentLocation -= FVector(0, 0, ZDeltaSpeed);
+	}
 
+	// Already on the desired location; Update next location value
+	if(XDistance < AcceptanceRadius && ZDistance < AcceptanceRadius)
+	{
+		// Update next location
+		UpdateNextLocation();
+	}
+	else // Not yet on the desired location
+	{
+		// Update current actor's location
 		SetActorLocation(CurrentLocation);
 	}
 }
 
-void AHostage::SetPathway(TArray<FVector>& PathwayToSet)
+void AHostage::UpdateNextLocation()
 {
-	Pathway = PathwayToSet;
+	if(HostageState == EHostageState::Alive)
+	{
+		if(PathwayIndex < Pathway.Num() - 1)
+		{
+			PathwayIndex ++;
+			NextLocation = Pathway[PathwayIndex];
+		}
+		else if(PathwayIndex == Pathway.Num() - 1)
+		{
+			PathwayIndex ++;
+			NextLocation += FVector(100, 0, 0);
+		}
+		else if(PathwayIndex == Pathway.Num())
+		{
+			Destroy();
+		}
+	}
+	else if(HostageState == EHostageState::Free || HostageState == EHostageState::Dead)
+	{
+		NextLocation = GetActorLocation();
+	}
 }
 
 void AHostage::SetFrontEnemy(AEnemy* EnemyToSet)
@@ -94,7 +111,6 @@ void AHostage::SetBackEnemy(AEnemy* EnemyToSet)
 {
 	BackEnemy = EnemyToSet;
 }
-
 
 int32 AHostage::GetID()
 {
@@ -115,4 +131,10 @@ void AHostage::SetPathwayID(int32 IDToSet)
 {
 	PathwayID = IDToSet;
 }
+
+void AHostage::SetPathway(TArray<FVector>& PathwayToSet)
+{
+	Pathway = PathwayToSet;
+}
+
 

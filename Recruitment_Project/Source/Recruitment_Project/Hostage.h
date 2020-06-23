@@ -35,7 +35,8 @@ class RECRUITMENT_PROJECT_API AHostage : public AActor
 	int32 Speed = 70;
 	// Movement location index. Used to iterate through the Pathway locations
 	FVector NextLocation = FVector(0);
-	int32 NextLocationIndex = 0;
+	float AcceptanceRadius = 0.5f;
+	int32 PathwayIndex = 0;
 
 	// References to the back and front enemy
 	AEnemy* FrontEnemy = nullptr;
@@ -54,10 +55,11 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Makes the hostage move to the location value in NextLocation
 	void MoveToNextLocation(float DeltaTime);
 
-	// Makes the hostage move along the assigned pathway
-	void Move(float DeltaTime);
+	// Update the value of NextLocation based on the hostage state
+	void UpdateNextLocation();
 
 	// Sets a reference to the front enemy
 	void SetFrontEnemy(AEnemy* EnemyToSet);
