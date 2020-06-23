@@ -25,8 +25,8 @@ protected:
 	virtual void BeginPlay() override;
 
 public:
-	// Called every frame
-	void Tick(float DeltaTime) override;
+	// Sets default values for this actor's properties
+	ACustomGameMode();
 
 	// Returns an array of FPathLocations containing the location of every tile in the terrain
 	TArray<FPathLocations> GetTerrainLocations();

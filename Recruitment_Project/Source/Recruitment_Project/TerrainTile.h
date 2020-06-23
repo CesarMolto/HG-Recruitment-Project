@@ -17,5 +17,4 @@ class RECRUITMENT_PROJECT_API ATerrainTile : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ATerrainTile();
-
 };

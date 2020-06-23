@@ -40,14 +40,13 @@ public:
 	TArray<FTile> Tiles;
 };
 
+/**
+ * Component responsible for the generation of the random terrain at the beginning of the game
+ */
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RECRUITMENT_PROJECT_API UTerrainGenerationComponent : public UActorComponent
 {
 	GENERATED_BODY()
-
-	// Blueprint tile variable used to spawn the terrain tiles with the appropiate info.
-	UPROPERTY(EditAnywhere, Category="Terrain Generation")
-	TSubclassOf<ATerrainTile> TileBP;
 
 	// Terrain size variables
 	int32 TerrainRows = 5;
@@ -75,7 +74,7 @@ public:
 	// Calculates the start spawning point of the terrain tiles and changes the visible area of the camera for the random terrain to fit
 	FVector GetStartSpawningLocation();
 
-	// Initialise the random terrain size, and the tiles type, material, sprite, and location in the world. Also returns a referece to the TArray where the tiles are saved
+	// Initialises the random terrain size, and the tiles type, material, sprite, and location in the world. Also returns a referece to the TArray where the tiles are saved
 	TArray<FPath>& GenerateRandomTerrain();
 
 	// Spawns the terrain tiles initialised at InitTerrainTiles()

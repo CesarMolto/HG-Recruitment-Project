@@ -5,7 +5,7 @@
 #include "PaperSprite.h"
 #include "PaperSpriteComponent.h"
 #include "EngineUtils.h"
-#include "Math/UnrealMathUtility.h"
+// #include "Math/UnrealMathUtility.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/CameraActor.h"
@@ -62,7 +62,7 @@ FVector UTerrainGenerationComponent::GetStartSpawningLocation()
 	CameraComponent->SetOrthoWidth(NewOrthoWidth);
 
 	// Calculate the position on the screen where the terrain tiles will start spawning
-	return FVector(-NewOrthoWidth/2 + TileWidth/2, 0, (-NewOrthoWidth/NewAspectRatio)/2 + TileHeight/2);
+	return FVector(-NewOrthoWidth/2 + TileWidth, 0, (-NewOrthoWidth/NewAspectRatio)/2 + TileHeight/2);
 }
 
 TArray<FPath>& UTerrainGenerationComponent::GenerateRandomTerrain() 															
@@ -87,7 +87,7 @@ TArray<FPath>& UTerrainGenerationComponent::GenerateRandomTerrain()
 		int32 VisibleTile = FMath::RandRange(0, TerrainColumns - 3); 
 
 		// Type of the last tile added to the terrain (Range between 1 and 2, we don't want a ramp as the first tile of a path)
-		int32 LastType = FMath::RandRange(0, 3); 
+		int32 LastType = FMath::RandRange(1, 2); 
 
 		for(int32 j = 0; j < TerrainColumns; j++) // Travel the terrain pathway's tiles
 		{
@@ -124,8 +124,8 @@ TArray<FPath>& UTerrainGenerationComponent::GenerateRandomTerrain()
 			// Initialise tile's location based on type
 			Tile.Location = StartLocation + FVector(TileWidth * j, YOffset * i, ZOffset * i);
 			
-			if(Tile.Type == 1 || Tile.Type == 2) // If the tile is a ramp, an offset of 40 units in the Y axis is applied
-				Tile.Location = Tile.Location + FVector(0, 0, 40);
+			 if(Tile.Type == 1 || Tile.Type == 2) // If the tile is a ramp, an offset of 40 units on the Z axis needs to be applied
+				Tile.Location += FVector(0, 0, 40);
 
 			// Add tile to the terrain array
 			TerrainTiles[i].Tiles.Add(Tile);
@@ -145,11 +145,9 @@ void UTerrainGenerationComponent::SpawnRandomTerrain()
 	for(int32 i = 0; i < TerrainTiles.Num(); i++) // Travel the paths of the terrain
 	{
 		for(int32 j = 0; j < TerrainTiles[i].Tiles.Num(); j++) // Travel the tiles of the current path
-		{
-			if(!TileBP) { UE_LOG(LogTemp, Warning, TEXT("Tile blueprint to spawn was not found!")); return; }
-			
+		{			
 			// Spawn tile at the appropiate world location
-			auto SpawnedTile = GetWorld()->SpawnActor<ATerrainTile>(TileBP, TerrainTiles[i].Tiles[j].Location, FRotator(0));
+			auto SpawnedTile = GetWorld()->SpawnActor<ATerrainTile>(TerrainTiles[i].Tiles[j].Location, FRotator(0));
 
 			if(!SpawnedTile) { UE_LOG(LogTemp, Warning, TEXT("Spawned tile was not found!")); return; }
 

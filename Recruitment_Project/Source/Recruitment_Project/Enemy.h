@@ -11,7 +11,13 @@ class RECRUITMENT_PROJECT_API AEnemy : public AActor
 {
 	GENERATED_BODY()
 
+	int32 NextLocationIndex = 0;
+
 	int32 PathwayID = -1;
+
+	TArray<FVector> Pathway;
+
+	int32 Speed = 70;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -24,6 +30,10 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	void Move(float DeltaTime);
+
+	void SetPathway(TArray<FVector>& PathwayToSet);
 
 	int32 GetPathwayID();
 	void SetPathwayID(int32 IDToSet);
