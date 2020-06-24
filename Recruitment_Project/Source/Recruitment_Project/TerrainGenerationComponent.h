@@ -19,13 +19,13 @@ struct RECRUITMENT_PROJECT_API FTile
 	GENERATED_BODY()
 
 public:
-	int32 Type;
+	int32 Type = 0;
 
-	int32 Material;
+	int32 Material = 0;
 
-	FVector Location;
+	FVector Location = FVector(0);
 	
-	UPaperSprite* Sprite;
+	UPaperSprite* Sprite = nullptr;
 };
 
 /**
@@ -79,4 +79,6 @@ public:
 
 	// Spawns the terrain tiles initialised at InitTerrainTiles()
 	void SpawnRandomTerrain();	
+
+	bool HasThreeVisibleTiles(FPath PathToCheck, FPath PreviousPath);
 };

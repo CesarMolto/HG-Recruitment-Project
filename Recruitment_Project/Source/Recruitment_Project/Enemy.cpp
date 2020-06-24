@@ -139,6 +139,9 @@ void AEnemy::KillEnemy()
 		if(SpriteComponent && DeadSprite)
 			SpriteComponent->SetSprite(DeadSprite);
 		
+		// Reset pathwayID value
+		PathwayID = -1;
+		
 		// Destroy actor after 1s
 		SetLifeSpan(1);
 	}

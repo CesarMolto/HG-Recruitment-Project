@@ -76,7 +76,7 @@ TArray<FPath>& UTerrainGenerationComponent::GenerateRandomTerrain()
 	{
 		// Initialise and add a new path to the terrain
 		FPath Path = FPath();
-		TerrainTiles.Add(Path);
+		// TerrainTiles.Add(Path);
 
 		// Initialise the first visible tile location in the current pathway (2nd and 3rd visible tiles will be the following ones)
 		int32 VisibleTile = FMath::RandRange(0, TerrainColumns - 3); 
@@ -102,19 +102,15 @@ TArray<FPath>& UTerrainGenerationComponent::GenerateRandomTerrain()
 
 			LastType = Tile.Type;
 
-			// TODO --> Ensure there ara at least three visible tiles in every pathway
-
-			// TODO --> Initialise tile's material 
+			// Initialise tile's material if tile is a normal block
+			if(Tile.Type == 0)
+			{
+				Tile.Material = FMath::RandRange(4, TileSprites.Num() - 1);
+			}
 
 			// Initialise tile's sprite based on type and material
-			if(Tile.Type == 0)
-				Tile.Sprite = TileSprites[12];
-			else if(Tile.Type == 1)
-				Tile.Sprite = TileSprites[7];
-			else if(Tile.Type == 2)
-				Tile.Sprite = TileSprites[4];
-			else if(Tile.Type == 3)
-				Tile.Sprite = TileSprites[13];
+			if(Tile.Type + Tile.Material < TileSprites.Num())
+				Tile.Sprite = TileSprites[Tile.Type + Tile.Material];
 
 			// Initialise tile's location based on type
 			Tile.Location = StartLocation + FVector(TileWidth * j, YOffset * i, ZOffset * i);
@@ -123,8 +119,21 @@ TArray<FPath>& UTerrainGenerationComponent::GenerateRandomTerrain()
 				Tile.Location += FVector(0, 0, 40);
 
 			// Add tile to the terrain array
-			TerrainTiles[i].Tiles.Add(Tile);
+			Path.Tiles.Add(Tile);
 		}
+
+		// Ensure there are at least three visible tiles in every pathway
+		if(i != 0) // Not initialising the first path
+		{
+			if(HasThreeVisibleTiles(Path, TerrainTiles[i - 1])) // If new path has at least three completely visible tiles
+				TerrainTiles.Add(Path); // Add path to the TerrainTiles array
+			else // Otherwise
+				i --; // Reinitialise path
+		}
+		else // The first path is always going to be completely visible
+		{
+			TerrainTiles.Add(Path);
+		}	
 	}
 	// Spawn the terrain tiles in the world
 	SpawnRandomTerrain(); 
@@ -153,5 +162,51 @@ void UTerrainGenerationComponent::SpawnRandomTerrain()
 			TileSprite->SetSprite(TerrainTiles[i].Tiles[j].Sprite);
 		}
 	}
+}
+
+bool UTerrainGenerationComponent::HasThreeVisibleTiles(FPath PathToCheck, FPath PreviousPath)
+{
+	// Init counter for visible tiles
+	int32 VisibleTiles = 0;
+
+	for(int32 i = 0; i < PathToCheck.Tiles.Num() && i < PreviousPath.Tiles.Num(); i++)
+	{
+		int32 PreviousType = PreviousPath.Tiles[i].Type;
+		int32 CheckType = PathToCheck.Tiles[i].Type;
+
+		if(PreviousType == 0)
+		{
+			if(CheckType >= PreviousType)
+				VisibleTiles ++;
+			else
+				VisibleTiles = 0;	
+		}
+		else if(PreviousType == 1)
+		{
+			if(CheckType == 1 || CheckType == 3)
+				VisibleTiles ++;
+			else
+				VisibleTiles = 0;
+		}
+		else if(PreviousType == 2)
+		{
+			if(CheckType == 2 || CheckType == 3)
+				VisibleTiles ++;
+			else
+				VisibleTiles = 0;
+		}
+		else
+		{
+			if(CheckType == 3)
+				VisibleTiles ++;
+			else
+				VisibleTiles = 0;
+		}			
+
+		if(VisibleTiles == 3)
+			return true;
+	}
+
+	return false;
 }
 
