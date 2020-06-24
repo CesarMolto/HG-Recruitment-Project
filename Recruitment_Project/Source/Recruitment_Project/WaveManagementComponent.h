@@ -61,10 +61,6 @@ public:
 	// Checks if the hostage to spawn is not already on the screen
 	bool IsHostageOnScreen(int32 HostageID, TArray<AActor*>& FoundHostages);
 
-	// Loads the hostage sprites from the content folder and saves them in an array
-	void LoadHostageSprites();
-	// Loads the enemy sprites from the content folder and saves them in an array
-	void LoadEnemySprites();
-	// Loads the gem sprites from the content folder and saves them in an array
-	void LoadGemSprites();
+	// Loads the sprites from the indicated route and saves them in the array paramenter
+	void LoadSprites(FString Route, TArray<UPaperSprite*>& SpritesArray);
 };

@@ -21,11 +21,11 @@ void UWaveManagementComponent::Init(TArray<FPathLocations> TerrainLocationsToSet
 	// Set terrain locations reference
 	TerrainLocations = TerrainLocationsToSet;
 	// Load hostage sprites
-	LoadHostageSprites();
+	LoadSprites("/Game/Assets/Images/Hostages", HostageSprites);
 	// Load enemy sprites
-	LoadEnemySprites();
+	LoadSprites("/Game/Assets/Images/Enemy", EnemySprites);
 	// Load gem sprites
-	LoadGemSprites();
+	LoadSprites("/Game/Assets/Images/Gems", GemSprites);
 }
 
 void UWaveManagementComponent::SpawnWaves()
@@ -135,8 +135,7 @@ TArray<AEnemy*> UWaveManagementComponent::SpawnEnemies(FVector& SpawningLocation
 		if(!SpawnedEnemy) { UE_LOG(LogTemp, Warning, TEXT("SpawnedEnemy was not found!")); return Enemies; }
 		
 		// Set the pathwayID and the pathway of the spawned enemy
-		SpawnedEnemy->SetPathwayID(PathwayID);
-		SpawnedEnemy->SetPathway(Pathway);
+		SpawnedEnemy->InitEnemy(PathwayID, Pathway);
 
 		// Get the spawned enemy sprite component
 		UPaperSpriteComponent* EnemySprite = SpawnedEnemy->FindComponentByClass<UPaperSpriteComponent>();
@@ -168,15 +167,15 @@ TArray<AEnemy*> UWaveManagementComponent::SpawnEnemies(FVector& SpawningLocation
 
 bool UWaveManagementComponent::IsPathwayFree(int32 PathwayID, TArray<AActor*>& FoundHostages, TArray<AActor*>& FoundEnemies)
 {	
-	for(auto Hostage : FoundHostages)
+	for(auto Hostage : FoundHostages) // Iterates through all the hostages in the world
 	{
-		if(PathwayID == Cast<AHostage>(Hostage)->GetPathwayID())
+		if(PathwayID == Cast<AHostage>(Hostage)->GetPathwayID()) // Checks if any of the hostages is already on the selected pathway
 			return false;
 	}
 
-	for(auto Enemy : FoundEnemies)
+	for(auto Enemy : FoundEnemies) // Iterates through all the enemies in the world
 	{
-		if(PathwayID == Cast<AEnemy>(Enemy)->GetPathwayID())
+		if(PathwayID == Cast<AEnemy>(Enemy)->GetPathwayID()) // Check if any of them is already on the selected pathway
 			return false;
 	}
 
@@ -185,54 +184,28 @@ bool UWaveManagementComponent::IsPathwayFree(int32 PathwayID, TArray<AActor*>& F
 
 bool UWaveManagementComponent::IsHostageOnScreen(int32 HostageID, TArray<AActor*>& FoundHostages)
 {	
-	for(auto Hostage : FoundHostages)
+	for(auto Hostage : FoundHostages) // Iterates through all the hostages
 	{
-		if(HostageID == Cast<AHostage>(Hostage)->GetID())
+		if(HostageID == Cast<AHostage>(Hostage)->GetID()) // Checks if the selected hostage has been spawned already
 			return true;
 	}
 
 	return false;
 }
 
-void UWaveManagementComponent::LoadHostageSprites()
+void UWaveManagementComponent::LoadSprites(FString Route, TArray<UPaperSprite*>& SpritesArray)
 {
-	TArray<UObject*> HostageTextures;
-	EngineUtils::FindOrLoadAssetsByPath(TEXT("/Game/Assets/Images/Hostages"), HostageTextures, EngineUtils::ATL_Regular);
+	// Find all  objects in folder
+	TArray<UObject*> Textures;
+	EngineUtils::FindOrLoadAssetsByPath(*Route, Textures, EngineUtils::ATL_Regular);
 
-	for (auto Asset : HostageTextures)
+	for (auto Asset : Textures) // Iterate through all the found objects
 	{
-		UPaperSprite* Sprite = Cast<UPaperSprite>(Asset);
-		if (Sprite != nullptr)
-			HostageSprites.Add(Sprite);
-	}
-}
-
-void UWaveManagementComponent::LoadEnemySprites()
-{
-	TArray<UObject*> EnemyTextures;
-	EngineUtils::FindOrLoadAssetsByPath(TEXT("/Game/Assets/Images/Enemy"), EnemyTextures, EngineUtils::ATL_Regular);
-
-	for (auto Asset : EnemyTextures)
-	{
-		UPaperSprite* Sprite = Cast<UPaperSprite>(Asset);
-		if (Sprite != nullptr)
-			EnemySprites.Add(Sprite);
-	}
-}
-
-void UWaveManagementComponent::LoadGemSprites()
-{
-	// Find all  objects in the Gem's folder
-	TArray<UObject*> GemTextures;
-	EngineUtils::FindOrLoadAssetsByPath(TEXT("/Game/Assets/Images/Gems"), GemTextures, EngineUtils::ATL_Regular);
-
-	for (auto Asset : GemTextures) // Iterate through all the found objects
-	{
-		// Save the objects that are Paper Sprites in the GemSprites array
+		// Save the objects that are Paper Sprites in the Sprites array
 		UPaperSprite* Sprite = Cast<UPaperSprite>(Asset);
 		if (Sprite != nullptr)
 		{
-			GemSprites.Add(Sprite);
+			SpritesArray.Add(Sprite);
 		}		
 	}
 }

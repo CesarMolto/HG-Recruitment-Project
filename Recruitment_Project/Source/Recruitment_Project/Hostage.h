@@ -28,7 +28,7 @@ class RECRUITMENT_PROJECT_API AHostage : public AActor
 	// Sprite component
 	UPaperSpriteComponent* SpriteComponent = nullptr;
 
-	// Sprite to set when the hostages is killed
+	// Sprite to set when the hostage is killed
 	UPaperSprite* DeadSprite = nullptr;
 
 	// Hostage identification. Used to recognize the hostage --> 
@@ -41,10 +41,12 @@ class RECRUITMENT_PROJECT_API AHostage : public AActor
 
 	// Movement speed 
 	int32 Speed = 70;
-	// Movement location index. Used to iterate through the Pathway locations
-	FVector NextLocation = FVector(0);
-	float AcceptanceRadius = 1;
+	// Pathway index. Used to iterate through the Pathway locations
 	int32 PathwayIndex = 0;
+	// Stocks the location the hostage will go next
+	FVector NextLocation = FVector(0);
+	// Acceptance radius when moving to a new location
+	float AcceptanceRadius = 1;
 
 	// References to the back and front enemy
 	AEnemy* FrontEnemy = nullptr;
@@ -64,7 +66,11 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Inits the basic hostage variables such as ID, PathwayID, or Pathway
 	void InitHostage(int32 IDToSet, int32 PathwayIDToSet, TArray<FVector>& PathwayToSet, int32 CharacterWidth);
+
+	// Inits the UILocation and UIScale on the screen of the hostage
+	void InitUILocationAndScale(int32 CharacterWidth);
 
 	// Makes the hostage move to the location value in NextLocation
 	void MoveToNextLocation(float DeltaTime);
@@ -72,8 +78,14 @@ public:
 	// Update the value of NextLocation based on the hostage state
 	void UpdateNextLocation();
 
-	// Sets the UI location on the top-right corner of the screen
-	void SetUILocationAndScale(int32 CharacterWidth);
+	// Checks if the front and back enemies are still alive
+	void CheckEnemies();
+
+	// Inits the value of the Dead sprite variable
+	void SetDeadSprite(UPaperSprite* SpriteToSet);
+
+	// Sets a new hostage state
+	void SetState(EHostageState StateToSet);
 
 	// Sets a reference to the front enemy
 	void SetFrontEnemy(AEnemy* EnemyToSet);
@@ -86,17 +98,6 @@ public:
 	// Gets the assigned pathway identification
 	int32 GetPathwayID();
 
-	// Sets the value of the Dead sprite variable
-	void SetDeadSprite(UPaperSprite* SpriteToSet);
-
-	// Sets a new hostage state
-	void SetState(EHostageState StateToSet);
-
 	// Returns the current hostage state
 	EHostageState GetHostageState() const;
-
-	// Checks if the front and back enemies are still alive
-	void CheckEnemies();
-
-	void InitUILocationAndScale(int32 CharacterWidth);
 };

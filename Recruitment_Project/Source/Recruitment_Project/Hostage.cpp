@@ -13,7 +13,9 @@ AHostage::AHostage()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Intialise sprite component
 	SpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("SpriteComponent"));
+	// Set sprite component as root 
 	RootComponent = SpriteComponent;
 }
 
@@ -21,17 +23,40 @@ AHostage::AHostage()
 void AHostage::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	// Hostage movement
 	MoveToNextLocation(DeltaTime);
+	// Check if front and back enemies are still alive
 	CheckEnemies();
 }
 
 void AHostage::InitHostage(int32 IDToSet, int32 PathwayIDToSet, TArray<FVector>& PathwayToSet, int32 CharacterWidth)
 {
+	// Set hostage ID
 	ID = IDToSet;
+	// Set pathway ID
 	PathwayID = PathwayIDToSet;
+	// Set Pathway reference
 	Pathway = PathwayToSet;
 
+	// Init UI Location and Scale
 	InitUILocationAndScale(CharacterWidth);
+}
+
+void AHostage::InitUILocationAndScale(int32 CharacterWidth)
+{	
+	// Get Screen width and height
+	int32 ScreenWidth = Pathway.Num() * CharacterWidth;
+	int32 ScreenHeight = ScreenWidth;
+
+	// Initialise UIScale
+	UIScale = FVector((float)ScreenWidth / 800.0f); // 800 is the maximus width of the screen
+
+	// Calculate UILocation X and Z component
+	int32 XUILocation = (ScreenWidth / 2) - ((ID + 1)  * CharacterWidth / 2);
+	int32 ZUILocation = ScreenHeight / 2 - CharacterWidth / 2;
+
+	// Initialise UILoction
+	UILocation = FVector(XUILocation, -ID, ZUILocation);
 }
 
 void AHostage::MoveToNextLocation(float DeltaTime)
@@ -91,27 +116,68 @@ void AHostage::MoveToNextLocation(float DeltaTime)
 
 void AHostage::UpdateNextLocation()
 {
-	if(HostageState == EHostageState::Alive)
+	if(HostageState == EHostageState::Alive) // The hostage is alive
 	{
-		if(PathwayIndex < Pathway.Num() - 1)
+		if(PathwayIndex < Pathway.Num() - 1) // The hostage is still going through the pathway locations
 		{
 			PathwayIndex ++;
-			NextLocation = Pathway[PathwayIndex];
+			NextLocation = Pathway[PathwayIndex]; // Update NextLocation with the next Pathway location value
 		}
-		else if(PathwayIndex == Pathway.Num() - 1)
+		else if(PathwayIndex == Pathway.Num() - 1) // The hostage is in the last location of the Pathway
 		{
 			PathwayIndex ++;
-			NextLocation += FVector(100, 0, 0);
+			NextLocation += FVector(100, 0, 0); // Update NextLocation one last time to make the hostage move out of the screen
 		}
-		else if(PathwayIndex == Pathway.Num())
+		else if(PathwayIndex == Pathway.Num()) // The hostage is already out of the screen
 		{
+			// Destroy de hostage actor
 			Destroy();
 		}
 	}
-	else if(HostageState == EHostageState::Free || HostageState == EHostageState::Dead)
+	else if(HostageState == EHostageState::Free || HostageState == EHostageState::Dead) // The hostage has to move to UILocation
 	{
+		// Assign UILocation value to the NextLocaiton variable
 		NextLocation = UILocation;
+		// Set Actor Location to NextLocation (Makes sure that the hostage does not shake once it has reached the UILocation)
 		SetActorLocation(NextLocation);
+	}
+}
+
+void AHostage::CheckEnemies()
+{
+	if(FrontEnemy && BackEnemy)
+	{
+		if(!FrontEnemy->IsEnemyAlive() && !BackEnemy->IsEnemyAlive() && HostageState == EHostageState::Alive)
+			SetState(EHostageState::Free);
+	}
+}
+
+void AHostage::SetDeadSprite(UPaperSprite* SpriteToSet)
+{
+	if(!SpriteToSet) { return; }
+	DeadSprite = SpriteToSet;
+}
+
+void AHostage::SetState(EHostageState StateToSet)
+{
+	if(HostageState == EHostageState::Alive) // If the character is Alive
+	{
+		// Change state, move character to UILocation, and set UIScale
+		HostageState = StateToSet;
+		NextLocation = UILocation;
+		SetActorScale3D(UIScale);
+
+		// Increment movement speed
+		Speed = 300;
+		
+		// Reset pathway ID
+		PathwayID = -1;
+
+		if(StateToSet == EHostageState::Dead) // If character was killed
+		{
+			if(SpriteComponent && DeadSprite)
+				SpriteComponent->SetSprite(DeadSprite); // Set hostage dead sprite
+		}	
 	}
 }
 
@@ -135,55 +201,9 @@ int32 AHostage::GetPathwayID()
 	return PathwayID;
 }
 
-void AHostage::SetDeadSprite(UPaperSprite* SpriteToSet)
+EHostageState AHostage::GetHostageState() const
 {
-	if(!SpriteToSet) { return; }
-
-	DeadSprite = SpriteToSet;
-}
-
-void AHostage::SetState(EHostageState StateToSet)
-{
-	if(HostageState == EHostageState::Alive)
-	{
-		HostageState = StateToSet;
-		NextLocation = UILocation;
-		SetActorScale3D(UIScale);
-		Speed = 300;
-		PathwayID = -1;
-
-		if(HostageState == EHostageState::Dead)
-		{
-			if(SpriteComponent && DeadSprite)
-				SpriteComponent->SetSprite(DeadSprite);
-		}	
-	}
-}
-
-void AHostage::CheckEnemies()
-{
-	if(FrontEnemy && BackEnemy)
-	{
-		if(!FrontEnemy->IsEnemyAlive() && !BackEnemy->IsEnemyAlive() && HostageState == EHostageState::Alive)
-			SetState(EHostageState::Free);
-	}
-}
-
-void AHostage::InitUILocationAndScale(int32 CharacterWidth)
-{	
-	// Get Screen width and height
-	int32 ScreenWidth = Pathway.Num() * CharacterWidth;
-	int32 ScreenHeight = ScreenWidth;
-
-	// Initialise UIScale
-	UIScale = FVector((float)ScreenWidth / 800.0f); // 800 is the maximus width of the screen
-
-	// Calculate UILocation X and Z component
-	int32 XUILocation = (ScreenWidth / 2) - ((ID + 1)  * CharacterWidth / 2);
-	int32 ZUILocation = ScreenHeight / 2 - CharacterWidth / 2;
-
-	// Initialise UILoction
-	UILocation = FVector(XUILocation, -ID, ZUILocation);
+	return HostageState;
 }
 
 
