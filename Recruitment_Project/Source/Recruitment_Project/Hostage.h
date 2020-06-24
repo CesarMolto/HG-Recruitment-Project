@@ -99,5 +99,5 @@ public:
 	int32 GetPathwayID();
 
 	// Returns the current hostage state
-	EHostageState GetHostageState() const;
+	EHostageState GetHostageState();
 };

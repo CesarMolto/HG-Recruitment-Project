@@ -6,15 +6,15 @@
 #include "Components/ActorComponent.h"
 #include "ScoringComponent.generated.h"
 
+// Forward declarations
+class AActor;
 
 UCLASS()
 class RECRUITMENT_PROJECT_API UScoringComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-	int32 Bullets = 20;
-
-	int32 FreedHostages = 0;
+	int32 KilledHostages = 0;
 	int32 KilledEnemies = 0;
 	int32 CollectedGems = 0;
 
@@ -22,17 +22,17 @@ public:
 	// Sets default values for this component's properties
 	UScoringComponent();
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
+	void UpdateScore(AActor* HitActor);	
 
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	UFUNCTION(BlueprintCallable)
+	int32 GetFreedHostages();
 
-	void UpdateBullets();
-	void UpdateKilledEnemies();
-	void UpdateCollectedGems();
+	UFUNCTION(BlueprintCallable)
+	int32 GetKilledHostages() const;
 
-	bool ShouldGameEnd();	
+	UFUNCTION(BlueprintCallable)
+	int32 GetKilledEnemies() const;
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetCollectedGems() const;
 };

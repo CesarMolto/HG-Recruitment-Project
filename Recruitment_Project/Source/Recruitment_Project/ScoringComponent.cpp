@@ -1,57 +1,70 @@
 // Copyright Cesar Molto Morilla
 
-
 #include "ScoringComponent.h"
+#include "Hostage.h"
+#include "Enemy.h"
+#include "Gem.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values for this component's properties
 UScoringComponent::UScoringComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
-
-// Called when the game starts
-void UScoringComponent::BeginPlay()
+void UScoringComponent::UpdateScore(AActor* HitActor)
 {
-	Super::BeginPlay();
+	auto Class = HitActor->GetClass();
 
-	// ...
-	
+	if(Class == AHostage::StaticClass())
+	{
+		Cast<AHostage>(HitActor)->SetState(EHostageState::Dead);
+		KilledHostages ++;
+	}
+	else if(Class == AEnemy::StaticClass())
+	{
+		Cast<AEnemy>(HitActor)->KillEnemy();
+		KilledEnemies ++;
+	}
+	else if(Class == AGem::StaticClass())
+	{
+		HitActor->Destroy();
+		CollectedGems ++;
+	}
 }
 
-
-// Called every frame
-void UScoringComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+int32 UScoringComponent::GetFreedHostages()
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	// Init variable to return
+	int32 FreedHostages = 0;
 
-	// ...
+	// Find all hostages on the screen
+	TArray<AActor*> FoundHostages;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AHostage::StaticClass(), FoundHostages);
+
+	for(auto Hostage : FoundHostages) // Iterates through all the hostages in the world
+	{
+		if(EHostageState::Free == Cast<AHostage>(Hostage)->GetHostageState()) // Checks the current hostage has been freed
+			FreedHostages ++;
+	}
+
+	return FreedHostages;
 }
 
-void UScoringComponent::UpdateBullets()
+int32 UScoringComponent::GetKilledHostages() const
 {
-	Bullets --;
+	return KilledHostages;
 }
 
-void UScoringComponent::UpdateKilledEnemies()
+int32 UScoringComponent::GetKilledEnemies() const
 {
-	KilledEnemies ++;
+	return KilledEnemies;
 }
 
-void UScoringComponent::UpdateCollectedGems()
+int32 UScoringComponent::GetCollectedGems() const
 {
-	CollectedGems ++;
-}
-
-bool UScoringComponent::ShouldGameEnd()
-{
-	if(Bullets == 0)
-		return true;
-	
-	return false;
+	return CollectedGems;
 }
 

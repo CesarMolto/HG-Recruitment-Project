@@ -201,7 +201,7 @@ int32 AHostage::GetPathwayID()
 	return PathwayID;
 }
 
-EHostageState AHostage::GetHostageState() const
+EHostageState AHostage::GetHostageState()
 {
 	return HostageState;
 }

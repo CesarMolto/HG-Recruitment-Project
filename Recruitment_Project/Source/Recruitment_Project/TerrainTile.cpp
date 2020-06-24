@@ -9,7 +9,9 @@ ATerrainTile::ATerrainTile()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-	UPaperSpriteComponent* SpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("TileSprite"));
+	// Init sprite component
+	SpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("TileSprite"));
+	// Set sprite component as root
 	RootComponent = SpriteComponent;
 }
 

@@ -19,11 +19,19 @@ class RECRUITMENT_PROJECT_API ACustomPlayerController : public APlayerController
 
 	UScoringComponent* ScoringComponent;
 
+	int32 Bullets = 20;
+
 public:
 	ACustomPlayerController();
 
 	void SetupInputComponent();
 
 	void HandleTouch();
+
+	UFUNCTION(BlueprintCallable)
+	int32 GetBulletsLeft() const;
+
+	UFUNCTION(BlueprintCallable)
+	bool ShouldGameFinish();
 	
 };

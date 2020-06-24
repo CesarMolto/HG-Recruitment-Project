@@ -24,7 +24,7 @@ public:
 };
 
 /**
- * Component responsible for the wave spawning and management
+ * Component responsible for the spawn and manage waves
  */
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RECRUITMENT_PROJECT_API UWaveManagementComponent : public UActorComponent
