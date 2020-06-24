@@ -6,10 +6,19 @@
 #include "GameFramework/Actor.h"
 #include "Enemy.generated.h"
 
+// Forward declarations
+class UPaperSprite;
+class UPaperSpriteComponent;
+
 UCLASS()
 class RECRUITMENT_PROJECT_API AEnemy : public AActor
 {
 	GENERATED_BODY()
+
+	UPaperSpriteComponent* SpriteComponent = nullptr;
+
+	// Sprite to set when the hostages is killed
+	UPaperSprite* DeadSprite = nullptr;
 
 	int32 PathwayIndex = 0;
 	FVector NextLocation = FVector(0);
@@ -17,9 +26,13 @@ class RECRUITMENT_PROJECT_API AEnemy : public AActor
 
 	int32 PathwayID = -1;
 
+	bool IsAlive = true;
+
 	TArray<FVector> Pathway;
 
 	int32 Speed = 70;
+
+	UPaperSprite* RewardSprite;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -31,7 +44,7 @@ public:
 	// Makes the hostage move to the location value in NextLocation
 	void MoveToNextLocation(float DeltaTime);
 
-	// Update the value of NextLocation to the next location in the Pathway array
+	// Updates the value of NextLocation to the next location value in the Pathway array
 	void UpdateNextLocation();
 	
 	// Gets the assigned pathway identification
@@ -41,4 +54,14 @@ public:
 
 	// Sets the pathway the enemy will walk through
 	void SetPathway(TArray<FVector>& PathwayToSet);
+
+	void SetDeadSprite(UPaperSprite* SpriteToSet);
+
+	void SetRewardSprite(UPaperSprite* SpriteToSet);
+
+	void KillEnemy();
+
+	bool IsEnemyAlive();
+
+	void SpawnReward();
 };

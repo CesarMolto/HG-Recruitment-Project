@@ -2,7 +2,9 @@
 
 
 #include "Hostage.h"
+#include "Enemy.h"
 #include "PaperSpriteComponent.h"
+#include "PaperSprite.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 
 // Sets default values
@@ -11,7 +13,7 @@ AHostage::AHostage()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	UPaperSpriteComponent* SpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("HostageSprite"));
+	SpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("SpriteComponent"));
 	RootComponent = SpriteComponent;
 }
 
@@ -20,6 +22,16 @@ void AHostage::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	MoveToNextLocation(DeltaTime);
+	CheckEnemies();
+}
+
+void AHostage::InitHostage(int32 IDToSet, int32 PathwayIDToSet, TArray<FVector>& PathwayToSet, int32 CharacterWidth)
+{
+	ID = IDToSet;
+	PathwayID = PathwayIDToSet;
+	Pathway = PathwayToSet;
+
+	InitUILocationAndScale(CharacterWidth);
 }
 
 void AHostage::MoveToNextLocation(float DeltaTime)
@@ -98,7 +110,8 @@ void AHostage::UpdateNextLocation()
 	}
 	else if(HostageState == EHostageState::Free || HostageState == EHostageState::Dead)
 	{
-		NextLocation = GetActorLocation();
+		NextLocation = UILocation;
+		SetActorLocation(NextLocation);
 	}
 }
 
@@ -117,24 +130,60 @@ int32 AHostage::GetID()
 	return ID;
 }
 
-void AHostage::SetID(int32 IDToSet)
-{
-	ID = IDToSet;
-}
-
 int32 AHostage::GetPathwayID()
 {
 	return PathwayID;
 }
 
-void AHostage::SetPathwayID(int32 IDToSet)
+void AHostage::SetDeadSprite(UPaperSprite* SpriteToSet)
 {
-	PathwayID = IDToSet;
+	if(!SpriteToSet) { return; }
+
+	DeadSprite = SpriteToSet;
 }
 
-void AHostage::SetPathway(TArray<FVector>& PathwayToSet)
+void AHostage::SetState(EHostageState StateToSet)
 {
-	Pathway = PathwayToSet;
+	if(HostageState == EHostageState::Alive)
+	{
+		HostageState = StateToSet;
+		NextLocation = UILocation;
+		SetActorScale3D(UIScale);
+		Speed = 300;
+		PathwayID = -1;
+
+		if(HostageState == EHostageState::Dead)
+		{
+			if(SpriteComponent && DeadSprite)
+				SpriteComponent->SetSprite(DeadSprite);
+		}	
+	}
+}
+
+void AHostage::CheckEnemies()
+{
+	if(FrontEnemy && BackEnemy)
+	{
+		if(!FrontEnemy->IsEnemyAlive() && !BackEnemy->IsEnemyAlive() && HostageState == EHostageState::Alive)
+			SetState(EHostageState::Free);
+	}
+}
+
+void AHostage::InitUILocationAndScale(int32 CharacterWidth)
+{	
+	// Get Screen width and height
+	int32 ScreenWidth = Pathway.Num() * CharacterWidth;
+	int32 ScreenHeight = ScreenWidth;
+
+	// Initialise UIScale
+	UIScale = FVector((float)ScreenWidth / 800.0f); // 800 is the maximus width of the screen
+
+	// Calculate UILocation X and Z component
+	int32 XUILocation = (ScreenWidth / 2) - ((ID + 1)  * CharacterWidth / 2);
+	int32 ZUILocation = ScreenHeight / 2 - CharacterWidth / 2;
+
+	// Initialise UILoction
+	UILocation = FVector(XUILocation, -ID, ZUILocation);
 }
 
 

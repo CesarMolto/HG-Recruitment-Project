@@ -5,7 +5,6 @@
 #include "PaperSprite.h"
 #include "PaperSpriteComponent.h"
 #include "EngineUtils.h"
-// #include "Math/UnrealMathUtility.h"
 #include "Kismet/GameplayStatics.h"
 #include "Camera/CameraComponent.h"
 #include "Camera/CameraActor.h"
@@ -54,15 +53,11 @@ FVector UTerrainGenerationComponent::GetStartSpawningLocation()
 	// Calculate new orthographic width for the terrain to fit in the screen
 	int32 NewOrthoWidth = TerrainColumns * TileWidth;
 
-	// Set new aspect ratio of the camera component
-	float NewAspectRatio = 16/9;
-	CameraComponent->SetAspectRatio(NewAspectRatio);
-
 	// Set new orthographic width to the camera
 	CameraComponent->SetOrthoWidth(NewOrthoWidth);
 
 	// Calculate the position on the screen where the terrain tiles will start spawning
-	return FVector(-NewOrthoWidth/2 + TileWidth, 0, (-NewOrthoWidth/NewAspectRatio)/2 + TileHeight/2);
+	return FVector(-NewOrthoWidth/2 + TileWidth, 0, (-NewOrthoWidth)/2 + TileHeight/2);
 }
 
 TArray<FPath>& UTerrainGenerationComponent::GenerateRandomTerrain() 															
@@ -72,7 +67,7 @@ TArray<FPath>& UTerrainGenerationComponent::GenerateRandomTerrain()
 
 	// Initialise random terrain size
 	TerrainRows = FMath::RandRange(4, 5);
-	TerrainColumns = FMath::RandRange(6, 7);
+	TerrainColumns = FMath::RandRange(7, 8);
 
 	// Get the location where the tiles will start spawning
 	FVector StartLocation = GetStartSpawningLocation();

@@ -32,3 +32,26 @@ void UScoringComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 	// ...
 }
 
+void UScoringComponent::UpdateBullets()
+{
+	Bullets --;
+}
+
+void UScoringComponent::UpdateKilledEnemies()
+{
+	KilledEnemies ++;
+}
+
+void UScoringComponent::UpdateCollectedGems()
+{
+	CollectedGems ++;
+}
+
+bool UScoringComponent::ShouldGameEnd()
+{
+	if(Bullets == 0)
+		return true;
+	
+	return false;
+}
+

@@ -10,7 +10,7 @@
 #include "CustomGameMode.generated.h"
 
 /**
- * Class responsible for the Terrain Generation, Wave Management, and Scoring
+ * Class responsible for the Terrain Generation and Wave Management
  */
 UCLASS()
 class RECRUITMENT_PROJECT_API ACustomGameMode : public AGameModeBase

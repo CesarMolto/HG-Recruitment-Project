@@ -24,7 +24,7 @@ public:
 };
 
 /**
- * Component responsible for the wave management of the game
+ * Component responsible for the wave spawning and management
  */
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RECRUITMENT_PROJECT_API UWaveManagementComponent : public UActorComponent
@@ -37,9 +37,10 @@ class RECRUITMENT_PROJECT_API UWaveManagementComponent : public UActorComponent
 	// Character size on the X axis (Spawn separation between characters)
 	int32 CharacterWidth = 100;
 
-	// Stocking arrays for the Hostage and Enemy sprites
+	// Stocking arrays for the Hostage, Enemy, and Gem sprites
 	TArray<UPaperSprite*> HostageSprites;
 	TArray<UPaperSprite*> EnemySprites;
+	TArray<UPaperSprite*> GemSprites;
 
 public:	
 	// Sets default values for this component's properties
@@ -64,4 +65,6 @@ public:
 	void LoadHostageSprites();
 	// Loads the enemy sprites from the content folder and saves them in an array
 	void LoadEnemySprites();
+	// Loads the gem sprites from the content folder and saves them in an array
+	void LoadGemSprites();
 };

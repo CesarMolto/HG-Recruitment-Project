@@ -3,6 +3,9 @@
 
 #include "Enemy.h"
 #include "PaperSpriteComponent.h"
+#include "PaperSprite.h"
+#include "Gem.h"
+#include "EngineUtils.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -10,7 +13,7 @@ AEnemy::AEnemy()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	UPaperSpriteComponent* SpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("EnemySprite"));
+	SpriteComponent = CreateDefaultSubobject<UPaperSpriteComponent>(TEXT("SpriteComponent"));
 	RootComponent = SpriteComponent;
 }
 
@@ -18,7 +21,8 @@ AEnemy::AEnemy()
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	MoveToNextLocation(DeltaTime);
+	if(IsAlive)
+		MoveToNextLocation(DeltaTime);
 }
 
 void AEnemy::MoveToNextLocation(float DeltaTime)
@@ -108,6 +112,58 @@ void AEnemy::SetPathwayID(int32 IDToSet)
 void AEnemy::SetPathway(TArray<FVector>& PathwayToSet)
 {
 	Pathway = PathwayToSet;
+}
+
+void AEnemy::SetDeadSprite(UPaperSprite* SpriteToSet)
+{
+	if(!SpriteToSet) { return; }
+
+	DeadSprite = SpriteToSet;
+}
+
+void AEnemy::SetRewardSprite(UPaperSprite* SpriteToSet)
+{
+	if(!SpriteToSet) { return; }
+	RewardSprite = SpriteToSet;
+}
+
+void AEnemy::KillEnemy()
+{
+	IsAlive = false;
+
+	SpawnReward();
+
+	SetActorLocation(GetActorLocation() - FVector(0, 2, 0));
+
+	if(SpriteComponent && DeadSprite)
+		SpriteComponent->SetSprite(DeadSprite);
+	
+	SetLifeSpan(1);
+}
+
+bool AEnemy::IsEnemyAlive()
+{
+	return IsAlive;
+}
+
+void AEnemy::SpawnReward()
+{
+	int32 ShouldSpawn = FMath::RandRange(0, 1);
+
+	if(ShouldSpawn > 0)
+	{
+		AGem* SpawnedGem = GetWorld()->SpawnActor<AGem>(GetActorLocation() - FVector(0, 1, 0), FRotator(0));
+		
+		if(!SpawnedGem) { UE_LOG(LogTemp, Warning, TEXT("SpawnedGem was not found!")); return; }
+
+		// Get the spawned gem sprite component
+		UPaperSpriteComponent* GemSprite = SpawnedGem->FindComponentByClass<UPaperSpriteComponent>();
+
+		if(!GemSprite) { UE_LOG(LogTemp, Warning, TEXT("Gem sprite COMPONENT was not found!")); return; }
+
+		if(RewardSprite)
+			GemSprite->SetSprite(RewardSprite);
+	}
 }
 
 

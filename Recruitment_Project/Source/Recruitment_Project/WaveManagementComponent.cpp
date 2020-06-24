@@ -24,6 +24,8 @@ void UWaveManagementComponent::Init(TArray<FPathLocations> TerrainLocationsToSet
 	LoadHostageSprites();
 	// Load enemy sprites
 	LoadEnemySprites();
+	// Load gem sprites
+	LoadGemSprites();
 }
 
 void UWaveManagementComponent::SpawnWaves()
@@ -97,16 +99,19 @@ AHostage* UWaveManagementComponent::SpawnHostage(FVector& SpawningLocation, int3
 	if(!SpawnedHostage) { UE_LOG(LogTemp, Warning, TEXT("Spawned hostage was not found!")); return nullptr; }
 
 	// Set hostage ID, PathwayID, and Pathway reference
-	SpawnedHostage->SetID(HostageID);
-	SpawnedHostage->SetPathwayID(PathwayID);
-	SpawnedHostage->SetPathway(Pathway);
+	SpawnedHostage->InitHostage(HostageID, PathwayID, Pathway, CharacterWidth);
+
+	if(HostageID + 5 >= HostageSprites.Num()) { UE_LOG(LogTemp, Warning, TEXT("The DEAD hostage sprite value was not found!")); return nullptr; }
+	
+	// Set hostage dead sprite
+	SpawnedHostage->SetDeadSprite(HostageSprites[HostageID + 5]);
 
 	// Get the sprite component of the spawned hostage
 	UPaperSpriteComponent* HostageSprite = SpawnedHostage->FindComponentByClass<UPaperSpriteComponent>();
 
 	if(!HostageSprite) { UE_LOG(LogTemp, Warning, TEXT("Hostage sprite COMPONENT was not found!")); return nullptr; }
 
-	if(!HostageSprites[HostageID]) { UE_LOG(LogTemp, Warning, TEXT("The hostage sprite value was not found!")); return nullptr; }
+	if(HostageID >= HostageSprites.Num() - 1) { UE_LOG(LogTemp, Warning, TEXT("The hostage sprite value was not found!")); return nullptr; }
 
 	// Set sprite value based on hostage ID
 	HostageSprite->SetSprite(HostageSprites[HostageID]);
@@ -138,10 +143,21 @@ TArray<AEnemy*> UWaveManagementComponent::SpawnEnemies(FVector& SpawningLocation
 
 		if(!EnemySprite) { UE_LOG(LogTemp, Warning, TEXT("Enemy sprite COMPONENT was not found!")); return Enemies; }
 		
-		if(EnemySprites.Num() < 1) { UE_LOG(LogTemp, Warning, TEXT("The enemy sprites array is empty!")); return Enemies; }
+		if(EnemySprites.Num() < 2) { UE_LOG(LogTemp, Warning, TEXT("The enemy sprites array is empty!")); return Enemies; }
 
 		// Set new sprite value 
 		EnemySprite->SetSprite(EnemySprites[0]);
+
+		// Set dead sprite value
+		SpawnedEnemy->SetDeadSprite(EnemySprites[1]);
+
+		// Initialise random gem to spawn when killed
+		int32 RandomGem = FMath::RandRange(0, GemSprites.Num() - 1);
+
+		if(GemSprites.Num() < 1) { UE_LOG(LogTemp, Warning, TEXT("The random gem sprite was not found!")); return Enemies; }
+
+		// Set the random gem sprite as the enemy gem sprite value
+		SpawnedEnemy->SetRewardSprite(GemSprites[RandomGem]);
 
 		// Save spawned enemy reference in the enemies array
 		Enemies.Add(SpawnedEnemy);
@@ -201,6 +217,23 @@ void UWaveManagementComponent::LoadEnemySprites()
 		UPaperSprite* Sprite = Cast<UPaperSprite>(Asset);
 		if (Sprite != nullptr)
 			EnemySprites.Add(Sprite);
+	}
+}
+
+void UWaveManagementComponent::LoadGemSprites()
+{
+	// Find all  objects in the Gem's folder
+	TArray<UObject*> GemTextures;
+	EngineUtils::FindOrLoadAssetsByPath(TEXT("/Game/Assets/Images/Gems"), GemTextures, EngineUtils::ATL_Regular);
+
+	for (auto Asset : GemTextures) // Iterate through all the found objects
+	{
+		// Save the objects that are Paper Sprites in the GemSprites array
+		UPaperSprite* Sprite = Cast<UPaperSprite>(Asset);
+		if (Sprite != nullptr)
+		{
+			GemSprites.Add(Sprite);
+		}		
 	}
 }
 
