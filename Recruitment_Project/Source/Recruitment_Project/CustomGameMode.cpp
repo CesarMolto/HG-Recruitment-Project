@@ -1,5 +1,8 @@
 // Copyright Cesar Molto Morilla
 
+#include "TerrainGenerationComponent.h"
+#include "WaveManagementComponent.h"
+
 #include "CustomGameMode.h"
 #include "CustomPlayerController.h"
 #include "TimerManager.h"
@@ -10,8 +13,8 @@ ACustomGameMode::ACustomGameMode()
     PlayerControllerClass = ACustomPlayerController::StaticClass();
     DefaultPawnClass = nullptr;
 
-    UTerrainGenerationComponent* TerrainComponent = CreateDefaultSubobject<UTerrainGenerationComponent>(TEXT("TerrainComponent"));
-    UWaveManagementComponent* WaveComponent = CreateDefaultSubobject<UWaveManagementComponent>(TEXT("WaveComponent"));
+    TerrainComponent = CreateDefaultSubobject<UTerrainGenerationComponent>(TEXT("TerrainComponent"));
+    WaveComponent = CreateDefaultSubobject<UWaveManagementComponent>(TEXT("WaveComponent"));
 }
 
 // Called when the game starts
@@ -21,30 +24,26 @@ void ACustomGameMode::BeginPlay()
 
 	/* GENERATE RANDOM TERRAIN */
     // Find Terrain Generation component
-    UTerrainGenerationComponent* TerrainGenerationComponent = FindComponentByClass<UTerrainGenerationComponent>(); 
-    if(!TerrainGenerationComponent) { UE_LOG(LogTemp, Warning, TEXT("Terrain generation component not found!")); return; }
+    if(!TerrainComponent) { UE_LOG(LogTemp, Warning, TEXT("Terrain generation component not found!")); return; }
 
     // Generate and save a reference to the terrain
-    Terrain = TerrainGenerationComponent->GenerateRandomTerrain();
+    Terrain = TerrainComponent->GenerateRandomTerrain();
 
     /* INITIALISE WAVE MANAGEMENT */
-    // Find Wave Management component
-    UWaveManagementComponent* WaveManagementComponent = FindComponentByClass<UWaveManagementComponent>(); 
-    if(!WaveManagementComponent) { UE_LOG(LogTemp, Warning, TEXT("Wave management component not found!")); return; }
+    if(!WaveComponent) { UE_LOG(LogTemp, Warning, TEXT("Wave management component not found!")); return; }
+
+    InitTerrainLocations();
 
     // Initialise component with the terrain locations array
-    WaveManagementComponent->Init(GetTerrainLocations());
+    WaveComponent->Init(TerrainLocations);
 
     // Set timer to call the wave management component's SpawnWaves() method every 3 seconds
     FTimerHandle TimerHandle = FTimerHandle();
-    GetWorldTimerManager().SetTimer(TimerHandle, WaveManagementComponent, &UWaveManagementComponent::SpawnWaves, 3.0f, true, 1.0f);
+    GetWorldTimerManager().SetTimer(TimerHandle, WaveComponent, &UWaveManagementComponent::SpawnWaves, 3.0f, true, 1.0f);
 }
 
-TArray<FPathLocations> ACustomGameMode::GetTerrainLocations()
+void ACustomGameMode::InitTerrainLocations()
 {
-    // Declare the TArray of FPathLocation the method is going to return
-    TArray<FPathLocations> TerrainLocations;
-
     for(int i = 0; i < Terrain.Num(); i++) // Travel through the Terrain paths
     {
         // Initialise and add a new FPathLocations to the TerrainLocations
@@ -70,6 +69,4 @@ TArray<FPathLocations> ACustomGameMode::GetTerrainLocations()
             TerrainLocations[i].TileLocations.Add(Terrain[i].Tiles[j].Location + FVector(0, YOffset, ZOffset));       
         }
     }
-    // Return the array containing all locations of the terrain tiles
-    return TerrainLocations;
 }

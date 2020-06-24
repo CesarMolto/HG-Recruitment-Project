@@ -47,7 +47,7 @@ public:
 	UWaveManagementComponent();
 
 	// Initialises the wave management component. Sets the reference of the terrain locations and loads the hostage and enemy sprites
-	void Init(TArray<FPathLocations> TerrainLocationsToSet);
+	void Init(TArray<FPathLocations>& TerrainLocationsToSet);
 
 	// Spawns a random number of waves (between the number of paths and 0)
 	void SpawnWaves();

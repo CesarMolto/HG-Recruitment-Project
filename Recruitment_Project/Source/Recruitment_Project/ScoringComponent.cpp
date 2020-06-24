@@ -16,20 +16,24 @@ UScoringComponent::UScoringComponent()
 
 void UScoringComponent::UpdateScore(AActor* HitActor)
 {
+	// Get hit actor class
 	auto Class = HitActor->GetClass();
 
-	if(Class == AHostage::StaticClass())
+	if(Class == AHostage::StaticClass()) // If hit actor is a hostage
 	{
+		// Kill hostage and increment by 1 KilledHostages value
 		Cast<AHostage>(HitActor)->SetState(EHostageState::Dead);
 		KilledHostages ++;
 	}
-	else if(Class == AEnemy::StaticClass())
+	else if(Class == AEnemy::StaticClass()) // If hit actor is a enemy
 	{
+		// Kill enemy and increment by 1 KilledEnemies value
 		Cast<AEnemy>(HitActor)->KillEnemy();
 		KilledEnemies ++;
 	}
-	else if(Class == AGem::StaticClass())
+	else if(Class == AGem::StaticClass()) // If hit actor is a gem
 	{
+		// Destroy the gem and increment by 1 the number of collected gems
 		HitActor->Destroy();
 		CollectedGems ++;
 	}
@@ -49,7 +53,7 @@ int32 UScoringComponent::GetFreedHostages()
 		if(EHostageState::Free == Cast<AHostage>(Hostage)->GetHostageState()) // Checks the current hostage has been freed
 			FreedHostages ++;
 	}
-
+	// Returns the total number of freed hostages so far
 	return FreedHostages;
 }
 

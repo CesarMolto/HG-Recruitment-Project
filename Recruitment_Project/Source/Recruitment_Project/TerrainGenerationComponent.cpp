@@ -169,44 +169,47 @@ bool UTerrainGenerationComponent::HasThreeVisibleTiles(FPath PathToCheck, FPath 
 	// Init counter for visible tiles
 	int32 VisibleTiles = 0;
 
-	for(int32 i = 0; i < PathToCheck.Tiles.Num() && i < PreviousPath.Tiles.Num(); i++)
+	for(int32 i = 0; i < PathToCheck.Tiles.Num() && i < PreviousPath.Tiles.Num(); i++) // Travel through both paths
 	{
+		// Save current tile for an easier access
 		int32 PreviousType = PreviousPath.Tiles[i].Type;
 		int32 CheckType = PathToCheck.Tiles[i].Type;
 
-		if(PreviousType == 0)
-		{
-			if(CheckType >= PreviousType)
-				VisibleTiles ++;
-			else
-				VisibleTiles = 0;	
+		if(PreviousType == 0) // If "in-front" tile is a normal block
+		{		
+			// The behind tile will never be concealed 
+			VisibleTiles ++;
+	
 		}
-		else if(PreviousType == 1)
+		else if(PreviousType == 1) // If "in-front" tile is a WEST ramp
 		{
+			// The behind tile will have to be a WEST ramp or a tall block to be completely visible
 			if(CheckType == 1 || CheckType == 3)
 				VisibleTiles ++;
 			else
 				VisibleTiles = 0;
 		}
-		else if(PreviousType == 2)
+		else if(PreviousType == 2) // If "in-front" tile is a EAST ramp
 		{
+			// The behind tile will have to be a EAST ramp or a tall block to be completely visible
 			if(CheckType == 2 || CheckType == 3)
 				VisibleTiles ++;
 			else
 				VisibleTiles = 0;
 		}
-		else
+		else // If "in-front" tile is a tall block
 		{
+			// The behind tile will have to be a tall block to be completely visible
 			if(CheckType == 3)
 				VisibleTiles ++;
 			else
 				VisibleTiles = 0;
 		}			
-
+		// If there are three consecutive completely visible tiles return true
 		if(VisibleTiles == 3)
 			return true;
 	}
-
+	// I there are no three consecutive visible tiles return false
 	return false;
 }
 

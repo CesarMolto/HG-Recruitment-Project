@@ -17,8 +17,12 @@ class RECRUITMENT_PROJECT_API ACustomGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+	UTerrainGenerationComponent* TerrainComponent;
+	UWaveManagementComponent* WaveComponent;
+
 	// Random generated terrain's info. reference
 	TArray<FPath> Terrain;
+	TArray<FPathLocations> TerrainLocations;
 
 protected:
 	// Called when the game starts
@@ -28,6 +32,6 @@ public:
 	// Sets default values for this actor's properties
 	ACustomGameMode();
 
-	// Returns an array of FPathLocations containing the location of every tile in the terrain
-	TArray<FPathLocations> GetTerrainLocations();
+	// Inits an array of FPathLocations containing the location of every tile in the terrain
+	void InitTerrainLocations();
 };

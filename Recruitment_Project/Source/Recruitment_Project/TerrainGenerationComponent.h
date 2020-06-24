@@ -80,5 +80,6 @@ public:
 	// Spawns the terrain tiles initialised at InitTerrainTiles()
 	void SpawnRandomTerrain();	
 
+	// Checks if there are at leas 3 completely visible tiles in the FPath PathToCheck
 	bool HasThreeVisibleTiles(FPath PathToCheck, FPath PreviousPath);
 };
