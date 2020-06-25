@@ -1,8 +1,5 @@
 // Copyright Cesar Molto Morilla
 
-#include "TerrainGenerationComponent.h"
-#include "WaveManagementComponent.h"
-
 #include "CustomGameMode.h"
 #include "CustomPlayerController.h"
 #include "TimerManager.h"

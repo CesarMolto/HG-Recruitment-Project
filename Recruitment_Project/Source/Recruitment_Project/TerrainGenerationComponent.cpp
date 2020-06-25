@@ -76,10 +76,6 @@ TArray<FPath>& UTerrainGenerationComponent::GenerateRandomTerrain()
 	{
 		// Initialise and add a new path to the terrain
 		FPath Path = FPath();
-		// TerrainTiles.Add(Path);
-
-		// Initialise the first visible tile location in the current pathway (2nd and 3rd visible tiles will be the following ones)
-		int32 VisibleTile = FMath::RandRange(0, TerrainColumns - 3); 
 
 		// Type of the last tile added to the terrain (Range between 1 and 2, we don't want a ramp as the first tile of a path)
 		int32 LastType = FMath::RandRange(1, 2); 
@@ -179,7 +175,6 @@ bool UTerrainGenerationComponent::HasThreeVisibleTiles(FPath PathToCheck, FPath 
 		{		
 			// The behind tile will never be concealed 
 			VisibleTiles ++;
-	
 		}
 		else if(PreviousType == 1) // If "in-front" tile is a WEST ramp
 		{
